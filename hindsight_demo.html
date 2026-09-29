@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Hindsight Live Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#0b1026;--card:#151c3d;--bd:#26315f;--tx:#f1f5f9;--mu:#94a3b8;--cy:#22d3ee;--pu:#a78bfa;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f6fb;--card:#fff;--bd:#d5dbec;--tx:#0f172a;--mu:#5b6478;--cy:#0e7490;--pu:#6d28d9}}
+:root[data-theme="dark"]{--bg:#0b1026;--card:#151c3d;--bd:#26315f;--tx:#f1f5f9;--mu:#94a3b8;--cy:#22d3ee;--pu:#a78bfa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:Calibri,'Segoe UI',system-ui,sans-serif}
+.w{max-width:960px;margin:0 auto;padding:16px}h1{font-size:22px;margin:0 0 4px;color:var(--cy)}p.s{margin:0 0 12px;color:var(--mu);font-size:14px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.tg{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:6px 12px;cursor:pointer;font-size:14px;user-select:none}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--mu)}.on .dot{background:var(--cy);box-shadow:0 0 8px var(--cy)}
+button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:6px 14px;cursor:pointer}
+.g{display:grid;grid-template-columns:2fr 1fr;gap:12px}@media(max-width:700px){.g{grid-template-columns:1fr}}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px}
+#log{height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px}
+.m{max-width:85%;padding:8px 12px;border-radius:12px;font-size:15px;line-height:1.35}
+.u{align-self:flex-end;background:var(--pu);color:#0b1026}.a{align-self:flex-start;border:1px solid var(--bd)}
+.r{display:block;margin-top:6px;font-size:12px;color:var(--cy);font-weight:600}
+.sys{align-self:center;color:var(--mu);font-size:12px}
+.in{display:flex;gap:8px;margin-top:10px}input{flex:1;font:inherit;padding:9px 12px;border-radius:20px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);min-width:0}
+.ch{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.ch button{font-size:12px;padding:4px 10px}
+h2{font-size:15px;margin:0 0 8px;color:var(--pu)}.f{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd);font-size:14px}.f b{color:var(--cy);font-weight:600}
+.e{color:var(--mu);font-size:13px}
+</style></head><body><div class="w">
+<h1>From Forgetful to Learning</h1><p class="s">Live demo: a chat agent with and without Hindsight-style memory. Tell it about yourself, start a New session, then ask for dinner.</p>
+<div class="bar"><div class="tg on" id="tg"><span class="dot"></span><span id="tl">Hindsight memory: ON</span></div><button id="ns">New session</button><span class="e" id="sn">Session 1</span></div>
+<div class="g"><div class="c"><div id="log"></div>
+<div class="in"><input id="i" placeholder="Type a message..." autocomplete="off"><button id="sd">Send</button></div>
+<div class="ch" id="ch"></div></div>
+<div class="c"><h2>Agent memory</h2><div id="mem"></div></div></div></div>
+<script>
+let on=true,facts={},session=1;
+const $=id=>document.getElementById(id),log=$('log');
+function add(t,c,rec){const d=document.createElement('div');d.className='m '+c;d.textContent=t;if(rec&&rec.length){const r=document.createElement('span');r.className='r';r.textContent='Recalled from memory: '+rec.join(', ');d.appendChild(r)}log.appendChild(d);log.scrollTop=log.scrollHeight}
+function sys(t){const d=document.createElement('div');d.className='sys';d.textContent=t;log.appendChild(d)}
+function render(){const m=$('mem'),k=Object.keys(facts);m.innerHTML='';if(!k.length){m.innerHTML='<div class="e">Nothing stored yet.</div>';return}
+const L={name:'Name',diet:'Diet',likes:'Likes',allergy:'Allergy',style:'Style',city:'City',study:'Studying'};
+k.forEach(x=>{const d=document.createElement('div');d.className='f';const a=document.createElement('span');a.textContent=L[x];const b=document.createElement('b');b.textContent=[].concat(facts[x]).join(', ');d.append(a,b);m.appendChild(d)})}
+function learn(t){const s=[];let m;
+if(m=t.match(/(?:my name is|call me|i'?m called)\s+([a-z]+)/i)){facts.name=m[1];s.push('name')}
+if(m=t.match(/i(?:'m| am)\s+(vegetarian|vegan|non-?veg(?:etarian)?)/i)){facts.diet=m[1].toLowerCase();s.push('diet')}
+if(m=t.match(/i (?:like|love|enjoy)\s+(?!short)(.+?)(?:[.!?]|$| and (?=i ))/i)){facts.likes=[...new Set([].concat(facts.likes||[],m[1].trim()))];s.push('likes')}
+if(m=t.match(/allergic to\s+(.+?)(?:[.!?]|$)/i)){facts.allergy=m[1].trim();s.push('allergy')}
+if(/short answers?|brief|concise/i.test(t)){facts.style='short answers';s.push('style')}
+if(m=t.match(/i live in\s+([a-z ]+?)(?:[.!?,]|$)/i)){facts.city=m[1].trim();s.push('city')}
+if(m=t.match(/i(?:'m| am)? ?(?:studying|study)\s+(.+?)(?:[.!?]|$)/i)){facts.study=m[1].trim();s.push('study')}
+return s}
+function reply(t){const s=learn(t),rec=[],short=facts.style&&on;render();
+if(s.length)return{t:on?'Got it, saved to memory.':'Got it.'};
+if(/dinner|lunch|food|eat|meal|recipe/i.test(t)){
+if(!facts.diet)return{t:'Sure! Do you have any dietary preferences? And how detailed would you like the answer?'};
+rec.push(facts.diet);const d={vegetarian:'chickpea curry with rice',vegan:'lentil dal with roti'}[facts.diet]||'grilled chicken with veggies';
+let x='Try '+d+'.';if(facts.allergy){x+=' No '+facts.allergy+'.';rec.push('allergy: '+facts.allergy)}
+if(short)rec.push('short answers');else x+=' Sauté spices, add the main ingredient, simmer 20 minutes, and serve warm.';return{t:x,r:rec}}
+if(/my name|who am i/i.test(t))return facts.name?{t:'You are '+facts.name+'.',r:['name']}:{t:"I don't know your name yet. What should I call you?"};
+if(/what do you (know|remember)|remember/i.test(t)){const k=Object.keys(facts);return k.length?{t:'I know: '+k.map(x=>x+' = '+[].concat(facts[x]).join(', ')).join('; ')+'.',r:k}:{t:"I don't remember anything about you yet."}}
+if(/recommend|suggest|what should/i.test(t)){if(facts.likes){return{t:'Since you like '+[].concat(facts.likes).join(', ')+', I would start there.',r:['likes']}}return{t:'Tell me a bit about what you like and I can suggest something.'}}
+if(/^(hi|hello|hey)/i.test(t))return{t:facts.name?'Hi '+facts.name+'! Good to see you again.':'Hi! Tell me about yourself.',r:facts.name?['name']:[]};
+return{t:'Try telling me your name, diet or interests, or ask for dinner ideas.'}}
+function send(v){v=(v||$('i').value).trim();if(!v)return;$('i').value='';add(v,'u');setTimeout(()=>{const r=reply(v);add(r.t,'a',on?r.r:[])},250)}
+function ns(){session++;if(!on)facts={};$('sn').textContent='Session '+session;log.innerHTML='';sys('New session started. '+(on?'Memory carried over.':'Memory was wiped: the agent forgot everything.'));render()}
+$('tg').onclick=()=>{on=!on;$('tg').className='tg'+(on?' on':'');$('tl').textContent='Hindsight memory: '+(on?'ON':'OFF')};
+$('ns').onclick=ns;$('sd').onclick=()=>send();$('i').onkeydown=e=>{if(e.key==='Enter')send()};
+['I am vegetarian and I like short answers','My name is Nikitha','I like machine learning','Suggest dinner','What do you remember?'].forEach(t=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>send(t);$('ch').appendChild(b)});
+sys('Step 1: tell it about yourself. Step 2: press New session. Step 3: ask "Suggest dinner". Then flip memory OFF and repeat.');render();
+</script></body></html>
